@@ -10,13 +10,17 @@ Created On: Jun 01, 2025
 Features:
 - Reads the API token from a file (default: .slotify_api_token)
 - Downloads exported ZIP files from the /api/export endpoint
-- Uploads ZIP files to the /api/import endpoint [disabled]
+- Uploads ZIP files to the /api/import endpoint
 - Deletes the temporary file after upload
 - Supports custom token file, output directory, and base URL
 
 Authentication:
 This client uses a Bearer token for API authentication.
 You must save your token in a file (default: .slotify_api_token), or use --token-file to specify a custom path.
+
+Usage:
+- python main.py export --base-url https://slotify.pythonanywhere.com
+- python main.py import --base-url https://slotify.pythonanywhere.com --zip-file ./backups/slotify_export_20250601_113656.zip
 """
 
 import argparse

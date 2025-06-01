@@ -2,7 +2,7 @@
 
 A simple command-line tool to **export and import database backups** for the [Slotify](https://slotify.pythonanywhere.com) app using its token-protected API.
 
-Developed by **Indrajit Ghosh**, this script is useful for scheduled backups and restoration.
+Developed by **[Indrajit Ghosh](https://indrajitghosh.onrender.com/)**, this script is useful for scheduled backups and restoration.
 
 ---
 
@@ -51,24 +51,25 @@ With options:
 
 ```bash
 python main.py export \
-    --output-dir ./backups \
-    --token-file ~/.my_token \
     --base-url https://slotify.pythonanywhere.com
+    --output-dir ./backups \ # (Optional)
+    --token-file ~/.my_token \ # (Optional)
+    
 ```
 
 ### Import Data
 
 ```bash
-python main.py import path/to/slotify_export_YYYYMMDD_HHMMSS.zip
+python main.py import --zip-file ~/Downloads/slotify_export.zip
 ```
 
 With options:
 
 ```bash
 python main.py import \
-    ~/Downloads/slotify_export.zip \
-    --token-file ~/.my_token \
     --base-url https://slotify.pythonanywhere.com
+    --zip-file ~/Downloads/slotify_export.zip \
+    --token-file .slotify_api_token # (Optional)
 ```
 
 ---
@@ -84,7 +85,9 @@ crontab -e
 Add this line (adjust path as needed):
 
 ```bash
-0 2 * * * /path/to/SlotifyBackups/env/bin/python /path/to/SlotifyBackups/main.py export >> /path/to/SlotifyBackups/cron.log 2>&1
+# Everyday at 11 AM
+0 11 * * * /path/to/SlotifyBackups/env/bin/python /path/to/SlotifyBackups/main.py export --base-url https://slotify.pythonanywhere.com >> /path/to/SlotifyBackups/cron.log 2>&1
+1
 ```
 
 > Ensure your `.slotify_api_token` exists in the same directory or provide `--token-file`.
