@@ -9,7 +9,7 @@ Developed by **Indrajit Ghosh**, this script is useful for scheduled backups and
 ## 🌟 Features
 
 - ✅ Export Slotify database as a ZIP file using the `/api/export` endpoint
-- ✅ Import a ZIP file to the Slotify database via `/api/import`
+- ✅ Import a ZIP file to the Slotify database via `/api/import` (Currently disabled)
 - ✅ Supports custom API base URL, token file path, and output directory
 - ✅ Automatically timestamps export files
 - ✅ Suitable for automated backups using cron

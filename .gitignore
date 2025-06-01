@@ -1,5 +1,7 @@
 ### Python ###
 .slotify_api_token
+backups/
+slotify_backups/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
