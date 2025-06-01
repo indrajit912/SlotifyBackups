@@ -36,7 +36,7 @@ logging.basicConfig(
 )
 
 # Defaults
-DEFAULT_BASE_URL = 'https://slotify.pythonanywhere.com'
+DEFAULT_BASE_URL = 'http://localhost:8080/'
 DEFAULT_TOKEN_PATH = Path.cwd() / '.slotify_api_token'
 DEFAULT_DOWNLOAD_DIR = Path.cwd() / 'backups'
 
@@ -99,45 +99,62 @@ def import_data(token, base_url, zip_file_path):
 
     if response.status_code != 200:
         logging.error(f"Import failed: {response.status_code} - {response.text}")
+        print(
+            "[!] Import failed. The database at --base-url might not be empty.\n"
+            "    Please delete the existing database and run:\n"
+            "      python manage.py setup-db\n"
+            "    in Slotify to create a blank database.\n"
+            "    After that, try importing again!"
+        )
         raise Exception(f"Import failed: {response.status_code} - {response.text}")
 
     logging.info("Import successful.")
     return response.json().get('message')
 
+
 def main():
     parser = argparse.ArgumentParser(description="Slotify API client to export or import data.")
-    parser.add_argument('--base-url', type=str, default=DEFAULT_BASE_URL,
-                        help=f'Base URL for the API (default: {DEFAULT_BASE_URL})')
-
     subparsers = parser.add_subparsers(dest='command', required=True)
 
-    # Export
+    # Export subcommand
     export_parser = subparsers.add_parser('export', help='Export data as ZIP file')
+    export_parser.add_argument('--base-url', type=str, default=DEFAULT_BASE_URL,
+                               help=f'Base URL for the API (default: {DEFAULT_BASE_URL})')
     export_parser.add_argument('--token-file', type=str, default=str(DEFAULT_TOKEN_PATH),
-                               help='Path to API token file (default: ~/.slotify_api_token)')
+                               help='Path to API token file (default: .slotify_api_token)')
     export_parser.add_argument('--output-dir', type=str, default=str(DEFAULT_DOWNLOAD_DIR),
                                help='Directory to save the exported ZIP (default: ./backups)')
 
-    # Import (disabled)
-    import_parser = subparsers.add_parser('import', help='(Disabled) Import is currently not available')
-    import_parser.add_argument('zip_file', type=str, help='(Disabled)')
+    # Import subcommand
+    import_parser = subparsers.add_parser('import', help='Import a ZIP backup file into the database')
+    import_parser.add_argument('--base-url', type=str, default=DEFAULT_BASE_URL,
+                               help=f'Base URL for the API (default: {DEFAULT_BASE_URL})')
     import_parser.add_argument('--token-file', type=str, default=str(DEFAULT_TOKEN_PATH),
-                               help='(Disabled)')
+                               help='Path to API token file (default: .slotify_api_token)')
+    import_parser.add_argument('--zip-file', type=str, help='Path to ZIP file to import')
 
     args = parser.parse_args()
 
     try:
-        if args.command == 'import':
-            raise NotImplementedError("The 'import' command is currently disabled.")
-
         token = load_token(args.token_file)
 
         if args.command == 'export':
             export_data(token, base_url=args.base_url, download_dir=args.output_dir)
 
+        elif args.command == 'import':
+            print(f"[!] You are about to import data into: {args.base_url}")
+            confirm = input("Are you sure you want to continue? This may overwrite existing data. (yes/no): ").strip().lower()
+            if confirm != 'yes':
+                print("[✗] Import cancelled.")
+                return
+            message = import_data(token, base_url=args.base_url, zip_file_path=args.zip_file)
+            print(f"[✓] Import successful: {message}")
+
     except Exception as e:
         logging.error(f"{type(e).__name__}: {e}")
         print(f"[✗] Error: {e}")
+ 
+
 
 if __name__ == '__main__':
     main()
