@@ -86,8 +86,7 @@ Add this line (adjust path as needed):
 
 ```bash
 # Everyday at 11 AM
-0 11 * * * /path/to/SlotifyBackups/env/bin/python /path/to/SlotifyBackups/main.py export --base-url https://slotify.pythonanywhere.com >> /path/to/SlotifyBackups/cron.log 2>&1
-1
+0 11 * * * cd /path/to/SlotifyBackups && /path/to/SlotifyBackups/env/bin/python /path/to/SlotifyBackups/main.py export --base-url https://slotify.pythonanywhere.com >> /path/to/SlotifyBackups/cron.log 2>&1
 ```
 
 > Ensure your `.slotify_api_token` exists in the same directory or provide `--token-file`.
