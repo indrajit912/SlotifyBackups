@@ -76,7 +76,7 @@ def export_data(token, base_url, download_dir=DEFAULT_DOWNLOAD_DIR):
 
     download_dir = Path(download_dir).expanduser()
     download_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = utcnow().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime('%b_%d_%Y_%I_%M_%p').lower()
     filename = f'slotify_export_{timestamp}.zip'
     file_path = download_dir / filename
 
