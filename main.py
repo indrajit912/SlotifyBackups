@@ -27,7 +27,7 @@ import argparse
 import requests
 import logging
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime
 
 # Logging setup
 LOG_FILE = Path.cwd() / "slotify_backups.log"
