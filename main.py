@@ -80,13 +80,35 @@ def export_data(token, base_url, download_dir=DEFAULT_DOWNLOAD_DIR):
     logging.info(f"Exported data saved to: {file_path}")
     return file_path
 
-def import_data(token, base_url, json_file_path):
+def import_data(base_url, json_file_path):
+    """
+    This function imports data into Slotify from a specified JSON file.
+    Args:
+        base_url (str): The base URL of the Slotify API.
+        json_file_path (str): The path to the JSON file to be imported.
+    Returns:
+        str: Success message from the API response.
+    Raises:
+        FileNotFoundError: If the specified JSON file does not exist.
+        Exception: If the import request fails.
+    
+    Usage:
+        import_data('http://localhost:8080', './backups/slotify_export_jan_01_2024_12_00_00_pm.json')
+    
+    Note: To use this function, ensure that the Slotify instance is running and accessible. And firt 
+    ensure that the database is empty and initialized. For this do the following:
+        1. Stop the Slotify server if it's running.
+        2. Delete the existing database file (e.g., slotify.db).
+        3. Now use the command: `flask db upgrade` to initialize a new database.
+        4. Start the Slotify server again.
+    After completing these steps, you can safely use the import_data function to import your data.
+    """
     file_path = Path(json_file_path).expanduser()
     if not file_path.exists() or not file_path.is_file():
         raise FileNotFoundError(f"File not found: {file_path}")
 
     logging.info(f"Initiating import with file: {file_path}")
-    headers = {'Authorization': f'Bearer {token}'}
+    
     import_endpoint = f'{base_url.rstrip("/")}/api/v1/import'
 
     # Log and print the POST request
@@ -95,7 +117,7 @@ def import_data(token, base_url, json_file_path):
 
     with open(file_path, 'rb') as f:
         files = {'file': (file_path.name, f, 'application/json')}
-        response = requests.post(import_endpoint, headers=headers, files=files)
+        response = requests.post(import_endpoint, files=files)
 
     if response.status_code != 200:
         logging.error(f"Import failed: {response.status_code} - {response.text}")
@@ -128,7 +150,7 @@ def main():
         path = export_data(token, args.base_url, args.download_dir)
         print(f"\n[✔] Export successful. File saved to: {path}\n")
     elif args.command == 'import':
-        message = import_data(token, args.base_url, args.json_file)
+        message = import_data(args.base_url, args.json_file)
         print(f"\n[✔] Import successful: {message}\n")
 
 if __name__ == '__main__':
