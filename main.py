@@ -120,9 +120,19 @@ def import_data(base_url, json_file_path):
         response = requests.post(import_endpoint, files=files)
 
     if response.status_code != 200:
-        logging.error(f"Import failed: {response.status_code} - {response.text}")
-        print("\n[!] Import failed. Ensure the database is empty and initialized.\n")
-        raise Exception(f"Import failed: {response.status_code} - {response.text}")
+        try:
+            error_json = response.json()
+            error_message = error_json.get("error", str(error_json))
+        except ValueError:
+            # response body was not JSON
+            error_message = response.text
+    
+        logging.error(f"Import failed: {response.status_code} - {error_message}")
+        raise SystemExit(
+            f"\n[!] Import failed ({response.status_code}). "
+            f"{error_message}\n\nEnsure the database is empty and initialized.\n"
+        )
+    
 
     logging.info("Import successful.")
     return response.json().get('message')
