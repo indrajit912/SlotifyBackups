@@ -22,12 +22,14 @@ Usage:
 - python slotify_client.py export --base-url https://slotify.pythonanywhere.com
 - python slotify_client.py import --base-url https://slotify.pythonanywhere.com --json-file ./backups/slotify_export_20250601_113656.json
 """
-
+import os
 import argparse
 import requests
 import logging
 from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
+
 
 # Logging setup
 LOG_FILE = Path.cwd() / "slotify_backups.log"
@@ -80,44 +82,63 @@ def export_data(token, base_url, download_dir=DEFAULT_DOWNLOAD_DIR):
     logging.info(f"Exported data saved to: {file_path}")
     return file_path
 
+
 def import_data(base_url, json_file_path):
     """
     This function imports data into Slotify from a specified JSON file.
+
     Args:
         base_url (str): The base URL of the Slotify API.
         json_file_path (str): The path to the JSON file to be imported.
+
     Returns:
         str: Success message from the API response.
+
     Raises:
         FileNotFoundError: If the specified JSON file does not exist.
-        Exception: If the import request fails.
-    
+        SystemExit: If the import request fails.
+
     Usage:
-        import_data('http://localhost:8080', './backups/slotify_export_jan_01_2024_12_00_00_pm.json')
-    
-    Note: To use this function, ensure that the Slotify instance is running and accessible. And firt 
-    ensure that the database is empty and initialized. For this do the following:
-        1. Stop the Slotify server if it's running.
-        2. Delete the existing database file (e.g., slotify.db).
-        3. Now use the command: `flask db upgrade` to initialize a new database.
-        4. Start the Slotify server again.
-    After completing these steps, you can safely use the import_data function to import your data.
+        import_data('http://localhost:8080', './backups/slotify_export.json')
+
+    Notes:
+        - Ensure that Slotify is running and accessible.
+        - The database must be empty and initialized before import:
+            1. Stop the Slotify server if it's running.
+            2. Delete the existing database file (e.g., slotify.db).
+            3. Run: flask db upgrade
+            4. Restart the server.
     """
+    # Load environment variables
+    env_path = Path(".") / ".env"
+    load_dotenv(dotenv_path=env_path)
+
+    import_token = os.getenv("SLOTIFY_IMPORT_TOKEN")
+    if not import_token:
+        raise SystemExit(
+            "[!] Missing SLOTIFY_IMPORT_TOKEN in environment.\n"
+            "Add it to your .env file as:\n\n"
+            "    SLOTIFY_IMPORT_TOKEN=your_generated_token\n"
+        )
+
+    # Validate JSON file
     file_path = Path(json_file_path).expanduser()
     if not file_path.exists() or not file_path.is_file():
         raise FileNotFoundError(f"File not found: {file_path}")
 
     logging.info(f"Initiating import with file: {file_path}")
-    
+
     import_endpoint = f'{base_url.rstrip("/")}/api/v1/import'
 
-    # Log and print the POST request
+    # Log the POST request
     logging.info(f"POST {import_endpoint}")
     print(f"POST {import_endpoint}")
 
-    with open(file_path, 'rb') as f:
-        files = {'file': (file_path.name, f, 'application/json')}
-        response = requests.post(import_endpoint, files=files)
+    headers = {"Authorization": f"Bearer {import_token}"}
+
+    with open(file_path, "rb") as f:
+        files = {"file": (file_path.name, f, "application/json")}
+        response = requests.post(import_endpoint, files=files, headers=headers)
 
     if response.status_code != 200:
         try:
@@ -126,16 +147,15 @@ def import_data(base_url, json_file_path):
         except ValueError:
             # response body was not JSON
             error_message = response.text
-    
+
         logging.error(f"Import failed: {response.status_code} - {error_message}")
         raise SystemExit(
-            f"\n[!] Import failed ({response.status_code}). "
+            f"\n[!] Import failed ({response.status_code}).\n"
             f"{error_message}\n\nEnsure the database is empty and initialized.\n"
         )
-    
 
     logging.info("Import successful.")
-    return response.json().get('message')
+    return response.json().get("message")
 
 def main():
     parser = argparse.ArgumentParser(description="Slotify API client to export or import data.")
